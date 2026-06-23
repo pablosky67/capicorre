@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nuestro Universo - Capy Campo Aventura ☀️🌳</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-sky: #a5f3fc; /* Azul claro brillante */
+            --grass-dark: #22c55e;
+            --primary: #bf55ec;
+            --primary-glow: rgba(191, 85, 236, 0.4);
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --success: #15803d;
+        }
+
+        body {
+            margin: 0;
+            padding: 10px;
+            background-color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .contenedor-juego {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            border: 3px solid #cbd5e1;
+            border-radius: 24px;
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .puntuacion {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        #lienzo-juego {
+            background: var(--bg-sky);
+            border-radius: 16px;
+            border: 2px solid #94a3b8;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .instrucciones {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-weight: 500;
+            animation: parpadeo 1.5s infinite;
+        }
+
+        /* Pantalla Recompensa Final */
+        .pantalla-recompensa {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            box-sizing: border-box;
+            padding: 25px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            animation: aparecer 0.5s ease forwards;
+        }
+
+        .recompensa-card {
+            background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%);
+            border: 2px solid #c084fc;
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 10px 25px rgba(192, 132, 252, 0.2);
+            margin-top: 10px;
+        }
+
+        .disco-vinilo {
+            width: 90px;
+            height: 90px;
+            background: #111;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            position: relative;
+            border: 3px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: rotar 4s linear infinite;
+        }
+
+        .disco-centro {
+            width: 30px;
+            height: 30px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 3px solid #111;
+        }
+
+        .cancion-titulo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: #581c87;
+        }
+
+        .cancion-artista {
+            font-size: 0.9rem;
+            color: #7e22ce;
+            margin: 0 0 15px 0;
+        }
+
+        .btn-spotify {
+            background: #1DB954;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .btn-spotify:hover { transform: scale(1.05); }
+
+        @keyframes parpadeo { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes rotar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes aparecer { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-juego">
+        <div class="info-header">
+            <span class="meta">Meta: 300 Puntos 🌙</span>
+            <span class="puntuacion" id="marcador">Score: 0</span>
+        </div>
+
+        <canvas id="lienzo-juego" width="600" height="250"></canvas>
+        
+        <p class="instrucciones">Presiona ESPACIO, Flecha Arriba o TOCA la pantalla para saltar</p>
+
+        <!-- PANTALLA DE RECOMPENSA -->
+        <div class="pantalla-recompensa" id="pantalla-premio">
+            <h2 style="margin: 0; background: linear-gradient(to right, #7e22ce, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">¡Lo Lograste! 🏁☀️</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0 15px 0;">El capibara completó su paseo y desbloqueó tu canción:</p>
+            
+            <div class="recompensa-card">
+                <div class="disco-vinilo">
+                    <div class="disco-centro"></div>
+                </div>
+                <h3 class="cancion-titulo">Paraíso Lunar</h3>
+                <p class="cancion-artista">Siddhartha 🌙</p>
+                
+                <a href="https://open.spotify.com/intl-es/track/7uMBJGgc3QWdDQWBtBoPzj?si=773721e5c51c4929" target="_blank" class="btn-spotify">
+                    <span>Escuchar en Spotify</span> 🎵
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("lienzo-juego");
+        const ctx = canvas.getContext("2d");
+        const marcador = document.getElementById("marcador");
+        const pantallaPremio = document.getElementById("pantalla-premio");
+
+        // Estado del juego
+        let puntuacion = 0;
+        let juegoActivo = true;
+        let listaObstaculos = [];
+        let relojObstaculos = 0;
+        let velocidadJuego = 5.5;
+
+        // Configuración física del Capibara
+        const capibara = {
+            x: 60,
+            y: 165,
+            ancho: 55,
+            alto: 40,
+            gravedad: 0.65,
+            potenciaSalto: -12.5,
+            velocidadY: 0,
+            enElSuelo: false,
+            frameAnimacion: 0,
+            contadorTicks: 0
+        };
+
+        // Controles universales (PC / Celular)
+        function ejecutarSalto() {
+            if (capibara.enElSuelo && juegoActivo) {
+                capibara.velocidadY = capibara.potenciaSalto;
+                capibara.enElSuelo = false;
+            }
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.code === "Space" || e.code === "ArrowUp") {
+                e.preventDefault();
+                ejecutarSalto();
+            }
+        });
+
+        document.addEventListener("touchstart", (e) => {
+            if (e.target.tagName !== 'A') {
+                ejecutarSalto();
+            }
+        }, { passive: true });
+
+        // Función para dibujar el escenario de fondo (Sol y nubes)
+        function dibujarFondo() {
+            // Dibujar Sol radiante
+            ctx.save();
+            ctx.fillStyle = "#f59e0b";
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#f59e0b";
+            ctx.beginPath();
+            ctx.arc(530, 45, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Nubes estáticas decorativas
+            ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+            ctx.beginPath(); ctx.arc(120, 50, 15, 0, Math.PI * 2); ctx.arc(140, 45, 20, 0, Math.PI * 2); ctx.arc(165, 50, 15, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(340, 70, 12, 0, Math.PI * 2); ctx.arc(358, 65, 16, 0, Math.PI * 2); ctx.arc(375, 70, 12, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Renderizado del Capibara con patitas móviles
+        function dibujarCapibara(ctx, x, y, frame) {
+            ctx.save();
+            
+            // Cuerpo (Café)
+            ctx.fillStyle = "#8B5A2B";
+            ctx.beginPath();
+            ctx.roundRect(x, y + 5, 45, 28, 8);
+            ctx.fill();
+
+            // Cabeza
+            ctx.beginPath();
+            ctx.roundRect(x + 28, y, 22, 20, 5);
+            ctx.fill();
+
+            // Hocico plano
+            ctx.fillStyle = "#6E4720";
+            ctx.fillRect(x + 42, y + 8, 9, 12);
+
+            // Oreja
+            ctx.fillStyle = "#543516";
+            ctx.fillRect(x + 32, y - 2, 4, 5);
+
+            // Ojo
+            ctx.fillStyle = "#111";
+            ctx.fillRect(x + 40, y + 5, 3, 3);
+
+            // Patas (Marrón oscuro) con alternancia de movimiento
+            ctx.fillStyle = "#543516";
+            let despLeg = (frame % 2 === 0) ? 6 : 0;
+
+            // Patas traseras
+            ctx.fillRect(x + 8 + despLeg, y + 32, 5, 9);
+            ctx.fillRect(x + 18 - despLeg, y + 32, 5, 9);
+            
+            // Patas delanteras
+            ctx.fillRect(x + 30 - despLeg, y + 32, 5, 9);
+            ctx.fillRect(x + 38 + despLeg, y + 32, 5, 9);
+
+            ctx.restore();
+        }
+
+        // Clase de Obstáculos de la naturaleza (Árboles, Rocas, Arbustos)
+        class ObstaculoNaturaleza {
+            constructor() {
+                this.x = canvas.width;
+                // Elige un tipo al azar: 0 = Árbol, 1 = Roca, 2 = Arbusto
+                this.tipo = Math.floor(Math.random() * 3);
+                
+                if (this.tipo === 0) { // Árbol
+                    this.ancho = 30;
+                    this.alto = 50;
+                } else if (this.tipo === 1) { // Roca
+                    this.ancho = 35;
+                    this.alto = 25;
+                } else { // Arbusto
+                    this.ancho = 40;
+                    this.alto = 30;
+                }
+                this.y = 205 - this.alto;
+            }
+
+            dibujar() {
+                ctx.save();
+                if (this.tipo === 0) {
+                    // Tronco
+                    ctx.fillStyle = "#78350f";
+                    ctx.fillRect(this.x + 11, this.y + 25, 8, 25);
+                    // Copa del árbol
+                    ctx.fillStyle = "#166534";
+                    ctx.beginPath();
+                    ctx.arc(this.x + 15, this.y + 18, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.tipo === 1) {
+                    // Roca gris
+                    ctx.fillStyle = "#64748b";
+                    ctx.beginPath();
+                    ctx.roundRect(this.x, this.y, this.ancho, this.alto, [10, 10, 2, 2]);
+                    ctx.fill();
+                    // Detalles de la roca
+                    ctx.fillStyle = "#475569";
+                    ctx.fillRect(this.x + 8, this.y + 6, 6, 4);
+                } else {
+                    // Arbusto frondoso
+                    ctx.fillStyle = "#15803d";
+                    ctx.beginPath();
+                    ctx.arc(this.x + 12, this.y + 18, 14, 0, Math.PI * 2);
+                    ctx.arc(this.x + 28, this.y + 18, 14, 0, Math.PI * 2);
+                    ctx.arc(this.x + 20, this.y + 10, 14, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            actualizar() {
+                this.x -= velocidadJuego;
+            }
+        }
+
+        // Bucle Principal del Juego
+        function bucleJuego() {
+            if (!juegoActivo) return;
+
+            // Limpiar pantalla
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar cielo y Sol
+            dibujarFondo();
+
+            // Dibujar suelo de pasto (Verde)
+            ctx.fillStyle = varColor("--grass-dark");
+            ctx.fillRect(0, 205, canvas.width, 45);
+            
+            // Detalle superficial del pasto oscuro
+            ctx.fillStyle = "#16a34a";
+            ctx.fillRect(0, 205, canvas.width, 5);
+
+            // 1. Manejo físico del Capibara
+            capibara.velocidadY += capibara.gravedad;
+            capibara.y += capibara.velocidadY;
+
+            // Tope del suelo
+            if (capibara.y >= 165) {
+                capibara.y = 165;
+                capibara.velocidadY = 0;
+                capibara.enElSuelo = true;
+            }
+
+            // Manejo de la animación de las patitas
+            if (capibara.enElSuelo) {
+                capibara.contadorTicks++;
+                if (capibara.contadorTicks > 5) {
+                    capibara.frameAnimacion = (capibara.frameAnimacion + 1) % 2;
+                    capibara.contadorTicks = 0;
+                }
+            } else {
+                capibara.frameAnimacion = 0;
+            }
+
+            dibujarCapibara(ctx, capibara.x, capibara.y, capibara.frameAnimacion);
+
+            // 2. Control Dinámico de Obstáculos
+            relojObstaculos++;
+            if (relojObstaculos > Math.max(45, 80 - velocidadJuego * 1.5)) {
+                listaObstaculos.push(new ObstaculoNaturaleza());
+                relojObstaculos = 0;
+            }
+
+            for (let i = listaObstaculos.length - 1; i >= 0; i--) {
+                let obs = listaObstaculos[i];
+                obs.actualizar();
+                obs.dibujar();
+
+                // Detección precisa de colisiones
+                if (
+                    capibara.x + 6 < obs.x + obs.ancho &&
+                    capibara.x + capibara.ancho - 8 > obs.x &&
+                    capibara.y + 4 < obs.y + obs.alto &&
+                    capibara.y + capibara.alto > obs.y
+                ) {
+                    // Reset en caso de choque
+                    puntuacion = 0;
+                    velocidadJuego = 5.5;
+                    listaObstaculos = [];
+                    marcador.innerText = "Score: 0";
+                    break;
+                }
+
+                // Si rebasa la pantalla, suma puntos
+                if (obs.x + obs.ancho < 0) {
+                    listaObstaculos.splice(i, 1);
+                    puntuacion += 10;
+                    marcador.innerText = `Score: ${puntuacion}`;
+                    
+                    // Aumenta la velocidad constantemente mientras más avanza
+                    velocidadJuego += 0.15;
+
+                    // CONDICIÓN DE VICTORIA CAMBIADA A 300 PUNTOS
+                    if (puntuacion >= 300) {
+                        conseguirVictoria();
+                        return;
+                    }
+                }
+            }
+
+            requestAnimationFrame(bucleJuego);
+        }
+
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        function conseguirVictoria() {
+            juegoActivo = false;
+            pantallaPremio.style.display = "flex";
+        }
+
+        // Arrancar juego automáticamente al cargar
+        bucleJuego();
+    </script>
+</body>
+</html>
